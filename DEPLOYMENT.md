@@ -1,4 +1,6 @@
-# Self-hosting guide
+# Self-hosting guide (manual install)
+
+> The easiest way to run SpeedReader is Docker: see **Quick start** in the [README](README.md). This guide is for installing it directly with Node.js and PostgreSQL.
 
 A local-first speed reading web app. Importing and reading need no cloud service (see the README for two optional Abacus.ai leftovers).
 
