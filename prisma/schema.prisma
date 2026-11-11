@@ -1,0 +1,120 @@
+generator client {
+    provider = "prisma-client-js"
+    binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+model Document {
+  id              String   @id @default(cuid())
+  title           String
+  author          String   @default("")
+  fileName        String
+  fileType        String
+  fileSize        Int
+  cloudStoragePath String  @default("")
+  storagePath     String   @default("")
+  isPublic        Boolean  @default(false)
+  contentText     String   @db.Text
+  wordCount       Int      @default(0)
+  readingStartIndex Int    @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  readingSessions ReadingSession[]
+  bookmarks       Bookmark[]
+  annotations     Annotation[]
+
+  @@index([createdAt])
+}
+
+model ReadingSession {
+  id            String   @id @default(cuid())
+  documentId    String
+  document      Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  technique     String   @default("rsvp")
+  wordsRead     Int      @default(0)
+  currentWordIndex Int   @default(0)
+  avgWpm        Int      @default(250)
+  durationSeconds Int    @default(0)
+  startedAt     DateTime @default(now())
+  endedAt       DateTime?
+
+  @@index([documentId])
+  @@index([startedAt])
+}
+
+model Bookmark {
+  id          String   @id @default(cuid())
+  documentId  String
+  document    Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  wordIndex   Int
+  label       String   @default("")
+  createdAt   DateTime @default(now())
+
+  @@index([documentId])
+}
+
+model Annotation {
+  id          String   @id @default(cuid())
+  documentId  String
+  document    Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  startIndex  Int
+  endIndex    Int
+  text        String
+  note        String   @default("")
+  color       String   @default("#FFD700")
+  createdAt   DateTime @default(now())
+
+  @@index([documentId])
+}
+
+model AppSettings {
+  id              String @id @default("global")
+  accentColor     String @default("#7C3AED")
+  highlightColor  String @default("#FBBF24")
+  readingFont     String @default("system")
+  updatedAt       DateTime @updatedAt
+}
+
+model NoteCategory {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  color     String   @default("#7C3AED")
+  createdAt DateTime @default(now())
+
+  notes      Note[]
+  flashcards Flashcard[]
+
+  @@index([name])
+}
+
+model Note {
+  id         String   @id @default(cuid())
+  title      String
+  content    String   @db.Text
+  categoryId String?
+  category   NoteCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  storagePath String  @default("")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([categoryId])
+  @@index([createdAt])
+}
+
+model Flashcard {
+  id         String   @id @default(cuid())
+  front      String   @db.Text
+  back       String   @db.Text
+  categoryId String?
+  category   NoteCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([categoryId])
+  @@index([createdAt])
+}
